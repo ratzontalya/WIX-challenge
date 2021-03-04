@@ -20,10 +20,9 @@ export type ApiClient = {
 export const createApiClient = (): ApiClient => {
     return {
         getTickets: (i:number,sortBy?:string) => {
-            if(sortBy) 
-                return axios.get(APIRootPath, {params:{numPage:i}}).then((res) => res.data.sort(functions[sortBy]));
-            else 
-                return axios.get(APIRootPath, {params:{numPage:i}}).then((res) => res.data);
+            return sortBy ? 
+            axios.get(APIRootPath, {params:{numPage:i}}).then((res) => res.data.sort(functions[sortBy]))
+            :axios.get(APIRootPath, {params:{numPage:i}}).then((res) => res.data);
         }
     }
 }
