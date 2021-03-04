@@ -5,6 +5,9 @@ import { createApiClient, Ticket } from './api';
 export type AppState = {
 	tickets?: TicketState[],
 	search: string,
+	page: number,
+	sortBy: string,
+	countHidden: number
 }
 export type TicketState = {
 	ticket: Ticket,
@@ -17,15 +20,16 @@ export class App extends React.PureComponent<{}, AppState> {
 	state: AppState = {
 		search: '',
 		tickets: [],
+		page: 1,
+		sortBy: '',
+		countHidden: 0
 	}
-	countHidden = 0;
+	
 	searchDebounce: any = null;
-	page = 1;
-	sortBy = ''
 	async componentDidMount() {
 		this.setState({
 			
-			tickets: (await api.getTickets(this.page, this.sortBy)).map((t) => {
+			tickets: (await api.getTickets(this.state.page, this.state.sortBy)).map((t) => {
 				var ticket: TicketState = {
 					ticket: t,
 					hide: false,
@@ -54,10 +58,10 @@ export class App extends React.PureComponent<{}, AppState> {
 			</li>))}
 		</ul>);
 	}
-	hideOrShowTicket = async (id:string) => {
-		this.countHidden = this.countHidden + 1;
+	hideOrShowTicket = async (id:string) => {;
 		this.setState
 		({
+			countHidden: this.state.countHidden + 1,
 			tickets: this.state.tickets?this.state.tickets.map((t) => {
 				var ticket: TicketState = {
 					ticket: t.ticket,
@@ -93,7 +97,6 @@ export class App extends React.PureComponent<{}, AppState> {
 	}
 
 	showAll = async (tickets: TicketState[]) => {
-		this.countHidden = 0;
 		tickets = tickets.map((t) => {
 			const ticket: TicketState = {
 				ticket: t.ticket,
@@ -102,17 +105,16 @@ export class App extends React.PureComponent<{}, AppState> {
 			}
 			return ticket;
 		})
-		this.setState({ tickets: tickets });
+		this.setState({ tickets: tickets,
+			countHidden: 0 });
 	}
 	nextPage(next: boolean) {
-		this.page = next ? this.page + 1 : this.page - 1;
-		this.countHidden = 0;
-		this.componentDidMount()
+		this.setState({page: next ? this.state.page + 1 : this.state.page - 1,
+		countHidden: 0});
 	}
 
 	sortByFunc(sort: string){
-		this.sortBy = sort;
-		this.componentDidMount()
+		this.setState({sortBy: sort});
 	}
 	render() {
 		const { tickets } = this.state;
@@ -127,12 +129,12 @@ export class App extends React.PureComponent<{}, AppState> {
 				<a className='blue-btn' onClick={(e) => this.sortByFunc('email')}>sort by email</a>
 			</div>
 			{tickets ? <div className='results'>Showing {tickets.length} results
-			{this.countHidden !== 0? <i className='results'>(<text>{this.countHidden}</text> hidden tickets -
+			{this.state.countHidden !== 0? <i className='results'>(<text>{this.state.countHidden}</text> hidden tickets -
 				<a style={{ cursor: 'pointer' }} onClick={(e) => tickets ? this.showAll(tickets) : null}>restore</a>)</i>:null}</div> : null}
 
 			{tickets ? this.renderTickets(tickets) : <h2>Loading..</h2>}
 			{tickets && tickets.length != 0 ? <a className='blue-btn' onClick={(e) => this.nextPage(true)}>next</a> : <h2>no more tickets</h2>}
-			{this.page != 1 ? <a className='blue-btn' onClick={(e) => this.nextPage(false)}>prev</a> : null}
+			{this.state.page != 1 ? <a className='blue-btn' onClick={(e) => this.nextPage(false)}>prev</a> : null}
 		</main>)
 	}
 }
