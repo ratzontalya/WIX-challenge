@@ -12,17 +12,15 @@ export type Ticket = {
     userEmail: string;
     labels?: string[];
 }
-
 export type ApiClient = {
-    getTickets: (i:number,sortBy?:string) => Promise<Ticket[]>;
+    getTickets: (i:number,descending:boolean, sortBy?:string) => Promise<Ticket[]>;
 }
 
 export const createApiClient = (): ApiClient => {
     return {
-        getTickets: (i:number,sortBy?:string) => {
-            return sortBy ? 
-            axios.get(APIRootPath, {params:{numPage:i}}).then((res) => res.data.sort(functions[sortBy]))
-            :axios.get(APIRootPath, {params:{numPage:i}}).then((res) => res.data);
+        getTickets: (i:number,descending:boolean, sortBy?:string) => {
+            var desc = descending ? descending:null;
+            return  axios.get(APIRootPath, {params:{numPage:i,sortBy:sortBy,descending:desc}}).then((res) => res.data);
         }
     }
 }

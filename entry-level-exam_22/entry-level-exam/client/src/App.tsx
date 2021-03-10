@@ -7,6 +7,7 @@ export type AppState = {
 	search: string,
 	page: number,
 	sortBy: string,
+	descending: boolean,
 	countHidden: number
 }
 export type TicketState = {
@@ -22,21 +23,22 @@ export class App extends React.PureComponent<{}, AppState> {
 		tickets: [],
 		page: 1,
 		sortBy: '',
+		descending: false,
 		countHidden: 0
 	}
 	
 	searchDebounce: any = null;
 	async componentDidMount() {
+		var tickets = (await api.getTickets(this.state.page, this.state.descending, this.state.sortBy)).map((t) => {
+			var ticket: TicketState = {
+				ticket: t,
+				hide: false,
+				showMore: false
+			}
+			return ticket;
+		})
 		this.setState({
-			
-			tickets: (await api.getTickets(this.state.page, this.state.sortBy)).map((t) => {
-				var ticket: TicketState = {
-					ticket: t,
-					hide: false,
-					showMore: false
-				}
-				return ticket;
-			})
+			tickets: tickets 
 		});
 	}
 
@@ -109,12 +111,14 @@ export class App extends React.PureComponent<{}, AppState> {
 			countHidden: 0 });
 	}
 	nextPage(next: boolean) {
-		this.setState({page: next ? this.state.page + 1 : this.state.page - 1,
-		countHidden: 0});
+		this.state.page = next ? this.state.page + 1 : this.state.page - 1;
+		this.state.countHidden = 0;
+		this.componentDidMount();
 	}
-
 	sortByFunc(sort: string){
-		this.setState({sortBy: sort});
+		this.state.descending = this.state.sortBy == sort ? !this.state.descending : false;
+		this.state.sortBy = sort; 
+		this.componentDidMount();
 	}
 	render() {
 		const { tickets } = this.state;
